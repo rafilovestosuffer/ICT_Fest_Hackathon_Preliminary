@@ -144,7 +144,7 @@ pytest
 - Export CSV header (exact):
   `id,reference_code,room_id,user_id,start_time,end_time,status,price_cents`
 
-### Errors
+###  Errors
 
 Application errors return JSON `{"detail": <string>, "code": <CODE>}` with codes:
 `USERNAME_TAKEN` (409), `INVALID_CREDENTIALS` (401), `ROOM_CONFLICT` (409),
