@@ -283,3 +283,98 @@ verification partner on the hard questions, a fast model on the mechanical ones,
 clean commit trail the whole way. Do that consistently and you won't win every time —
 nobody does — but you'll be in the top-10 conversation far more often than a stronger
 modeler who can't communicate or can't validate.
+
+---
+
+## Appendix — External research grounding (what confirms this, and what it refines)
+
+I pressure-tested this playbook against how top competitors and judges actually operate.
+The evidence both confirms the core thesis and sharpens two points. Sources at the end.
+
+### A. Kaggle Grandmasters: robust local validation is *the* thing — trust CV, not the public board
+
+The recurring grandmaster message is that setting up a **robust local validation scheme is
+the single most important step**, and that *every* local improvement should translate to
+the hidden leaderboard only if that validation is built correctly. The failure mode has a
+name — the **"shake-up"**: the private test set (usually ~95% of the data) reorders
+everyone at reveal because teams optimized for the tiny **public** leaderboard instead of
+generalizing. One writer documented **jumping ~1,700 places** at reveal purely by trusting
+his cross-validation instead of chasing the public score.
+
+This is the exact same failure that cost you last time, in a different costume. There, the
+unmodeled evaluation condition was the **container restart**; in a datathon it's the
+**hidden test split**. Same root error: *optimizing against what you can see instead of
+what will actually judge you.* Concrete grandmaster tactics to adopt:
+
+- **Build the CV scheme before you model, and pick it to match the data's structure:**
+  plain KFold for i.i.d. data, **GroupKFold** when the same entity (user, store, patient)
+  must not appear in both train and validation, **time-series split** when the test set is
+  in the future. Choosing the wrong split silently invents leakage.
+- **Adversarial validation** (a technique I under-weighted before, and it's powerful):
+  label all train rows 0 and all test rows 1, then train a classifier to tell them apart.
+  If it *can* (AUC ≫ 0.5), your train and test are drawn from different distributions —
+  your normal CV will lie to you — and the features that separate them tell you exactly
+  where the shift is. If it *can't* (AUC ≈ 0.5), your validation is trustworthy. Run this
+  early on every competition with a hidden set.
+- **Limit "probing" the public board.** Every extra public submission tempts you to overfit
+  that subset. Treat the public score as a *sanity check that correlates with CV*, never as
+  the optimization target.
+- **Refinement to my earlier "don't chase the 4th decimal" advice:** that's correct for the
+  **public leaderboard** and for storytelling datathons. For a **pure-ML leaderboard comp**,
+  the metric absolutely matters — grandmasters win with heavy feature engineering,
+  target transforms, ensembling/stacking, and pseudo-labeling. The precise rule is:
+  **relentlessly improve your CV-validated metric; never chase the public board.** Improving
+  a *trustworthy* score is the game; improving a *visible-but-misleading* score is the trap.
+
+### B. Datathon judges reward insight and communication over raw sophistication
+
+Across data-storytelling competitions the scored dimensions are consistently
+**insight quality, visualization, communication/presentation, and defensibility** — and,
+strikingly, the explicit judging guidance is that **"basic code paired with elaborate
+observations can score better than technically advanced submissions lacking
+elaboration."** Judges look for a *balance* of code, visuals, and written interpretation,
+and many events award separate prizes for "Best Presentation" and "Best Use of Additional
+Data." Several also enforce **ethical storytelling**: disclose your assumptions and
+limitations, and avoid speculative or misleading claims.
+
+Implications, made concrete:
+
+- The judge is not paying you for model complexity. They're paying for a **true, useful,
+  clearly-argued insight.** A clean logistic regression with a sharp, well-visualized
+  finding beats an unexplained stacked ensemble.
+- **State your limitations on purpose.** Counter-intuitively, naming your assumptions and
+  what could break your conclusion *raises* your credibility with expert judges — it's the
+  mark of someone who validated their own work (and it's often in the rubric).
+- **Bring outside data if allowed.** "Best Use of Additional Data" is a common prize
+  category precisely because most teams don't — enriching the given dataset is an
+  underused differentiator.
+
+### C. Visualization craft, per the canonical source (Storytelling with Data)
+
+The field's standard reference (Cole Nussbaumer Knaflic) backs the Part 3 rules directly:
+**use text for a single number and a graph for trends/comparisons; avoid 3D and pie
+charts; strip chart junk because every superfluous element adds cognitive load; use
+titles, annotations, and emphasis to build a narrative; give the story a clear
+beginning-middle-end; and start with context and one clear message, built for a specific
+audience.** In other words, the hero-chart-with-a-finding-as-its-title approach isn't my
+opinion — it's the textbook consensus. The winning move is to make the chart do the
+*interpreting*, not just the *displaying*.
+
+### D. Net effect on the playbook
+
+Nothing in the external evidence contradicts the system; it tightens it to three
+non-negotiables that survive across every competition type:
+
+1. **Model the real evaluator before you build** (hidden test / restart / rubric), and
+   validate against *that* — adversarial validation and the right CV split are how.
+2. **One true, defensible insight, with its limitations stated**, beats sophistication.
+3. **Communicate it with a hero chart whose title is the finding** — the textbook-endorsed,
+   judge-optimal move.
+
+**Sources**
+- [Kaggle Grandmasters Unveil Winning Strategies (NVIDIA)](https://developer.nvidia.com/blog/kaggle-grandmasters-unveil-winning-strategies-for-data-science-superpowers/)
+- [The Kaggle Grandmasters Playbook: 7 Battle-Tested Techniques (NVIDIA)](https://developer.nvidia.com/blog/the-kaggle-grandmasters-playbook-7-battle-tested-modeling-techniques-for-tabular-data/)
+- [Kaggle Handbook: Tips & Tricks to Survive a Shake-up (Medium)](https://medium.com/global-maksimum-data-information-technologies/kaggle-handbook-tips-tricks-to-survive-a-kaggle-shake-up-23675beed05e)
+- [Olympic Datathon — a data story-telling competition (judging guidance)](https://warwickdatasciencesociety.github.io/olympic-datathon/)
+- [ASEAN Data Science Explorers — Judging Criteria](https://aseandse.org/judging-criteria/)
+- [Storytelling with Data — Cole Nussbaumer Knaflic (Wiley)](https://www.wiley.com/en-us/Storytelling+with+Data:+A+Data+Visualization+Guide+for+Business+Professionals-p-9781119002253)
